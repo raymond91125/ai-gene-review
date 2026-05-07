@@ -9,8 +9,9 @@ inputs:
     description: "Anthropic API key"
     required: true
   cborg_api_key:
-    description: "CBORG API key"
-    required: true
+    description: "CBORG API key (deprecated, no longer used)"
+    required: false
+    default: ""
   prompt:
     description: "The prompt to send to Claude Code"
     required: false
@@ -160,8 +161,6 @@ runs:
         fi
       
       env:
-        ANTHROPIC_API_KEY: "."
-        ANTHROPIC_AUTH_TOKEN: ${{ inputs.cborg_api_key }}
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic_api_key }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
-        ANTHROPIC_BASE_URL: "https://api.cborg.lbl.gov"
         DISABLE_NON_ESSENTIAL_MODEL_CALLS: "1"

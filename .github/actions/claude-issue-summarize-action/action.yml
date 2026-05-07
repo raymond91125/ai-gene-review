@@ -10,8 +10,9 @@ inputs:
     description: "Anthropic API key"
     required: true
   cborg_api_key:
-    description: "CBORG API key"
-    required: true
+    description: "CBORG API key (deprecated, no longer used)"
+    required: false
+    default: ""
   github_token:
     description: "GitHub token with repo and issues permissions"
     required: true
