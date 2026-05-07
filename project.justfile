@@ -456,17 +456,25 @@ validate-tag tag:
 validate-all:
     #!/usr/bin/env bash
     exit_code=0
+    # Skip stub files with placeholder UniProt IDs (e.g. "id: [UniProt ID for X]")
+    files=$(grep -L "^id: \[UniProt ID for" genes/*/*/*-ai-review.yaml)
+    skipped=$(grep -l "^id: \[UniProt ID for" genes/*/*/*-ai-review.yaml || true)
+    if [ -n "$skipped" ]; then
+        echo "Skipping stub files (placeholder UniProt IDs):"
+        echo "$skipped" | sed 's/^/  - /'
+        echo ""
+    fi
     echo "Schema validation (batch)..."
-    uv run linkml-validate --schema {{schema_path}} --target-class GeneReview genes/*/*/*-ai-review.yaml || exit_code=1
+    uv run linkml-validate --schema {{schema_path}} --target-class GeneReview $files || exit_code=1
     echo ""
     echo "Term validation (batch)..."
     # Term validation reports label mismatches and branch errors; treat as advisory
     # for now (pre-existing issues on main). Use just validate-terms for strict checks.
-    uv run linkml-term-validator validate-data genes/*/*/*-ai-review.yaml -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} || echo "⚠ Term validation reported issues (non-blocking)"
+    uv run linkml-term-validator validate-data $files -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} || echo "⚠ Term validation reported issues (non-blocking)"
     echo ""
     echo "Best practices validation..."
     mkdir -p reports
-    uv run ai-gene-review validate --verbose --tsv-output reports/validation-all.tsv "genes/*/*/*-ai-review.yaml" || exit_code=1
+    uv run ai-gene-review validate --verbose --tsv-output reports/validation-all.tsv $files || exit_code=1
     echo ""
     echo "Checking PMID references in all pathway markdown files..."
     uv run python src/ai_gene_review/tools/validate_pmid_references.py genes/ || exit_code=1
