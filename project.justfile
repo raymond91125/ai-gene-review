@@ -456,12 +456,22 @@ validate-tag tag:
 validate-all:
     #!/usr/bin/env bash
     exit_code=0
-    # Skip stub files with placeholder UniProt IDs (e.g. "id: [UniProt ID for X]")
-    files=$(grep -L "^id: \[UniProt ID for" genes/*/*/*-ai-review.yaml)
-    skipped=$(grep -l "^id: \[UniProt ID for" genes/*/*/*-ai-review.yaml || true)
+    # Skip incomplete review stubs:
+    #   - placeholder UniProt IDs (e.g. "id: [UniProt ID for X]")
+    #   - missing companion -goa.tsv file
+    files=""
+    skipped=""
+    for f in genes/*/*/*-ai-review.yaml; do
+        goa="${f%-ai-review.yaml}-goa.tsv"
+        if grep -q "^id: \[UniProt ID for" "$f" || [ ! -f "$goa" ]; then
+            skipped="$skipped$f"$'\n'
+        else
+            files="$files $f"
+        fi
+    done
     if [ -n "$skipped" ]; then
-        echo "Skipping stub files (placeholder UniProt IDs):"
-        echo "$skipped" | sed 's/^/  - /'
+        echo "Skipping incomplete review stubs:"
+        echo "$skipped" | sed 's/^/  - /' | grep -v '^  - $'
         echo ""
     fi
     echo "Schema validation (batch)..."
