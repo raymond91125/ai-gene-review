@@ -459,11 +459,14 @@ validate-all:
     # Skip incomplete review stubs:
     #   - placeholder UniProt IDs (e.g. "id: [UniProt ID for X]")
     #   - missing companion -goa.tsv file
+    #   - placeholder description "[Add gene description here]"
     files=""
     skipped=""
     for f in genes/*/*/*-ai-review.yaml; do
         goa="${f%-ai-review.yaml}-goa.tsv"
-        if grep -q "^id: \[UniProt ID for" "$f" || [ ! -f "$goa" ]; then
+        if grep -q "^id: \[UniProt ID for" "$f" \
+            || grep -qF "[Add gene description here]" "$f" \
+            || [ ! -f "$goa" ]; then
             skipped="$skipped$f"$'\n'
         else
             files="$files $f"
